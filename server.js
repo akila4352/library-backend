@@ -1,29 +1,32 @@
 // server.js
 const express = require('express');
 const cors = require('cors');
-const bcrypt = require('bcryptjs');
 const { createClient } = require('@supabase/supabase-js');
 const nodemailer = require('nodemailer');
+const crypto = require('crypto'); // Import crypto for password hashing
+
 const app = express();
 const PORT = 5000;
 app.use(cors()); // Enable CORS
 app.use(express.json()); // Enable JSON parsing
+
 // Supabase initialization
 const supabase = createClient('https://deobdtmzdtongdpogufz.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlb2JkdG16ZHRvbmdkcG9ndWZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk3NzgwMzAsImV4cCI6MjA0NTM1NDAzMH0.Rxx1Z_WpkQpGQ8YEaaR10bcO4QXkTI098Ifnoo7T54M');
 
 // Nodemailer setup
 const transporter = nodemailer.createTransport({
-  service: 'gmail', //  email service
+  service: 'gmail', // email service
   auth: {
-    user: 'akilanirmalzz4352@gmail.com', //  email address
-    pass: 'laaw nfta nbjt qcym', //  App Password
+    user: 'akilanirmalzz4352@gmail.com', // email address
+    pass: 'laaw nfta nbjt qcym', // App Password
   },
 });
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Registration endpoint ************************************************************************************************8
+// Registration endpoint ************************************************************************************************
 app.post('/api/auth/register', async (req, res) => {
   const { firstName, lastName, username, email, password, address, address2, city, state, zip } = req.body;
 
@@ -31,7 +34,8 @@ app.post('/api/auth/register', async (req, res) => {
     return res.status(400).json({ message: 'Please fill all required fields.' });
   }
 
-  const hashedPassword = bcrypt.hashSync(password, 10);
+  // Hash password using crypto module (SHA-256)
+  const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
 
   try {
     const { data, error } = await supabase
@@ -42,7 +46,7 @@ app.post('/api/auth/register', async (req, res) => {
           last_name: lastName,
           username: username,
           email: email,
-          password: hashedPassword,
+          password: hashedPassword, // Store the hashed password
           address: address,
           address2: address2,
           city: city,
@@ -62,6 +66,7 @@ app.post('/api/auth/register', async (req, res) => {
     res.status(500).json({ message: 'An unexpected error occurred' });
   }
 });
+
 // Login endpoint **********************************************************************************
 app.post('/api/auth/login', async (req, res) => {
   const { email, password, userType } = req.body;
@@ -93,9 +98,11 @@ app.post('/api/auth/login', async (req, res) => {
 
     if (data.length > 0) {
       const storedPasswordHash = data[0].password;
-      const passwordMatch = bcrypt.compareSync(password, storedPasswordHash);
 
-      if (passwordMatch) {
+      // Hash the input password and compare with stored hash
+      const hashedInputPassword = crypto.createHash('sha256').update(password).digest('hex');
+
+      if (hashedInputPassword === storedPasswordHash) {
         res.status(200).json({
           message: 'Login successful!',
           firstName: data[0].first_name,
@@ -112,6 +119,7 @@ app.post('/api/auth/login', async (req, res) => {
     res.status(500).json({ message: 'An unexpected error occurred.' });
   }
 });
+
 // Endpoint to send OTP
 app.post('/api/auth/send-otp', async (req, res) => {
   const { email } = req.body;
