@@ -223,6 +223,8 @@ app.get('/api/borrowedbooks', async (req, res) => {
 });
 
 // Start server
+// Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on https://library2-a07874b48aa0.herokuapp.com`);
 });
+
