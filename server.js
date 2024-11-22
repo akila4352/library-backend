@@ -3,18 +3,18 @@ const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto'); // Import crypto for password hashing
-
+const dotenv = require('dotenv');
+dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000; // Dynamic port for Heroku
-
+const supabaseUrl = process.env.supabaseUrl;
+const supabaseKey = process.env.supabaseKey;
 app.use(cors()); // Enable CORS
 app.use(express.json()); // Enable JSON parsing
 
-// Supabase initialization (store credentials securely in environment variables)
-const supabase = createClient(
-  process.env.SUPABASE_URL, 
-  process.env.SUPABASE_ANON_KEY
-);
+// Use these variables to initialize Supabase
+const { createClient } = require('@supabase/supabase-js');
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Nodemailer setup (credentials stored in Heroku environment variables)
 const transporter = nodemailer.createTransport({
