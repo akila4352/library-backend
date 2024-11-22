@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
@@ -6,27 +5,27 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto'); // Import crypto for password hashing
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000; // Dynamic port for Heroku
+
 app.use(cors()); // Enable CORS
 app.use(express.json()); // Enable JSON parsing
 
-// Supabase initialization
-const supabase = createClient('https://deobdtmzdtongdpogufz.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlb2JkdG16ZHRvbmdkcG9ndWZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk3NzgwMzAsImV4cCI6MjA0NTM1NDAzMH0.Rxx1Z_WpkQpGQ8YEaaR10bcO4QXkTI098Ifnoo7T54M');
+// Supabase initialization (store credentials securely in environment variables)
+const supabase = createClient(
+  process.env.SUPABASE_URL, 
+  process.env.SUPABASE_ANON_KEY
+);
 
-// Nodemailer setup
+// Nodemailer setup (credentials stored in Heroku environment variables)
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // email service
+  service: 'gmail',
   auth: {
-    user: 'akilanirmalzz4352@gmail.com', // email address
-    pass: 'laaw nfta nbjt qcym', // App Password
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Registration endpoint ************************************************************************************************
+// Registration endpoint
 app.post('/api/auth/register', async (req, res) => {
   const { firstName, lastName, username, email, password, address, address2, city, state, zip } = req.body;
 
@@ -67,7 +66,7 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-// Login endpoint **********************************************************************************
+// Login endpoint
 app.post('/api/auth/login', async (req, res) => {
   const { email, password, userType } = req.body;
 
@@ -120,33 +119,6 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Endpoint to send OTP
-app.post('/api/auth/send-otp', async (req, res) => {
-  const { email } = req.body;
-
-  // Generate a 6-digit OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-  // Set up email options
-  const mailOptions = {
-    from: 'your-email@gmail.com', // Your email address
-    to: email,
-    subject: 'Your OTP Code',
-    text: `Your OTP code is: ${otp}`,
-  };
-
-  try {
-    // Send OTP to the provided email
-    await transporter.sendMail(mailOptions);
-    // Save OTP in database for verification (not shown here)
-
-    // Send success response
-    res.status(200).json({ message: 'OTP sent successfully', otp }); // Send OTP in response for testing (remove in production)
-  } catch (error) {
-    console.error('Error sending OTP:', error);
-    res.status(500).json({ message: 'Failed to send OTP' });
-  }
-});
 //Admin panel**************************************************************
 // Fetch all books
 app.get('/api/books', async (req, res) => {
@@ -223,8 +195,6 @@ app.get('/api/borrowedbooks', async (req, res) => {
 });
 
 // Start server
-// Start server
 app.listen(PORT, () => {
   console.log(`Server running on https://library2-a07874b48aa0.herokuapp.com`);
 });
-
